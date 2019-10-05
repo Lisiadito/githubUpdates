@@ -30,11 +30,16 @@ import (
 
 type githubDataType struct {
 	Subject Subject `json:"subject"`
+	Repository Repository `json:"repository"`
 }
 
 type Subject struct {
 	Title string `json:"title"`
 	Url   string `json:"url"`
+}
+
+type Repository struct {
+	Name string `json:"name"`
 }
 
 var telegram_api_token string
@@ -67,7 +72,7 @@ func main() {
 func addCronJob(bot ext.Bot, update *gotgbot.Update) error {
 	if len(c.Entries()) < 1 {
 		// call function every 5 minutes to check for updates
-		c.AddFunc("*/5 * * * *", func() {
+		c.AddFunc("* * * * *", func() {
 			checkGithub(bot, update)
 		})
 		c.Start()
@@ -113,7 +118,7 @@ func checkGithub(bot ext.Bot, update *gotgbot.Update) error {
 	}
 
 	for i := 0; i < len(githubData); i++ {
-		_, err := bot.SendMessage(update.Message.Chat.Id, githubData[i].Subject.Title)
+		_, err := bot.SendMessage(update.Message.Chat.Id, "Repository: " + githubData[i].Repository.Name + "\nNotification: " + githubData[i].Subject.Title + "\n" + githubData[i].Subject.Url)
 
 		if err != nil {
 			log.Fatal(err)
