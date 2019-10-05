@@ -12,7 +12,6 @@ TODO
 - check for chat token so that only the correct person gets the notifications
 - chat token could be set in .env or passed in via command line 
 - track which updates are already sent
-- check in intervals for updates. maybe use (https://godoc.org/github.com/robfig/cron)
 - send message on new updates
 - define struct and maybe send more information like repo name
 - dockerize

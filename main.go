@@ -4,7 +4,6 @@
  * - check for chat token so that only the correct person gets the notifications
  * - chat token could be set in .env or passed in via command line 
  * - track which updates are already sent
- * - check in intervals for updates. maybe use (https://godoc.org/github.com/robfig/cron)
  * - send message on new updates
  * - define struct and maybe send more information like repo name
  * - dockerize
@@ -25,6 +24,8 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/handlers"
 
 	"github.com/subosito/gotenv"
+
+	"github.com/robfig/cron"
 )
 
 type githubDataType struct {
@@ -36,14 +37,17 @@ type Subject struct {
 	Url   string `json:"url"`
 }
 
+var telegram_api_token string
+var github_api_token string
+var c = cron.New()
+
 func init() {
 	gotenv.Load()
+	telegram_api_token = os.Getenv("TELEGRAM_API_TOKEN") 
+	github_api_token = os.Getenv("GITHUB_API_TOKEN")
 }
 
 func main() {
-
-	telegram_api_token := os.Getenv("TELEGRAM_API_TOKEN")
-
 	updater, err := gotgbot.NewUpdater(telegram_api_token)
 
 	if err != nil {
@@ -51,7 +55,7 @@ func main() {
 	}
 
 	// message handler
-	updater.Dispatcher.AddHandler(handlers.NewCommand("start", foo))
+	updater.Dispatcher.AddHandler(handlers.NewCommand("start", addCronJob))
 
 	// start getting updates
 	updater.StartPolling()
@@ -60,15 +64,25 @@ func main() {
 	updater.Idle()
 }
 
-func foo(bot ext.Bot, update *gotgbot.Update) error {
-	github_api_token := os.Getenv("GITHUB_API_TOKEN")
+func addCronJob(bot ext.Bot, update *gotgbot.Update) error {
+	if len(c.Entries()) < 1 {
+		// call function every 5 minutes to check for updates
+		c.AddFunc("*/5 * * * *", func() {
+			checkGithub(bot, update)
+		})
+		c.Start()
+	}
 
+	return nil
+}
+
+func checkGithub(bot ext.Bot, update *gotgbot.Update) error {
 	client := &http.Client{
 		Timeout: time.Second * 10,
 	}
 
 	request, err := http.NewRequest("GET", "https://api.github.com/notifications", nil)
-	request.Header.Add("Authorization", "token "+github_api_token)
+	request.Header.Add("Authorization", "token " + github_api_token)
 
 	if err != nil {
 		log.Fatal(err)
