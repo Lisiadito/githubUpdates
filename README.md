@@ -11,7 +11,5 @@ TODO
 - check on start if all env are set
 - check for chat token so that only the correct person gets the notifications
 - chat token could be set in .env or passed in via command line 
-- track which updates are already sent
-- send message on new updates
 - define struct and maybe send more information like repo name
 - dockerize

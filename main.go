@@ -3,8 +3,6 @@
  * - check on start if all env are set
  * - check for chat token so that only the correct person gets the notifications
  * - chat token could be set in .env or passed in via command line 
- * - track which updates are already sent
- * - send message on new updates
  * - define struct and maybe send more information like repo name
  * - dockerize
  */
@@ -28,7 +26,7 @@ import (
 	"github.com/robfig/cron"
 )
 
-type githubDataType struct {
+type GithubDataType struct {
 	Subject Subject `json:"subject"`
 	Repository Repository `json:"repository"`
 }
@@ -42,9 +40,15 @@ type Repository struct {
 	Name string `json:"name"`
 }
 
+type GithubDataMessage struct {
+	GithubData GithubDataType
+	Send bool
+}
+
 var telegram_api_token string
 var github_api_token string
 var c = cron.New()
+var dataSet []GithubDataMessage
 
 func init() {
 	gotenv.Load()
@@ -69,9 +73,18 @@ func main() {
 	updater.Idle()
 }
 
+func addIfNotIncluded(myslice []GithubDataMessage, item GithubDataMessage) []GithubDataMessage {
+	for i := 0; i < len(myslice); i++ {
+		if myslice[i].GithubData == item.GithubData {
+			return myslice
+		}
+	}
+	return append(myslice, item)
+}
+  
 func addCronJob(bot ext.Bot, update *gotgbot.Update) error {
 	if len(c.Entries()) < 1 {
-		// call function every 5 minutes to check for updates
+		// call function every minute to check for updates
 		c.AddFunc("* * * * *", func() {
 			checkGithub(bot, update)
 		})
@@ -107,9 +120,7 @@ func checkGithub(bot ext.Bot, update *gotgbot.Update) error {
 		log.Fatal(err)
 	}
 
-	log.Println(string(body))
-
-	var githubData []githubDataType
+	var githubData []GithubDataType
 
 	error := json.Unmarshal(body, &githubData)
 
@@ -117,11 +128,19 @@ func checkGithub(bot ext.Bot, update *gotgbot.Update) error {
 		log.Fatal(error)
 	}
 
+	// add the the github data if not already included
 	for i := 0; i < len(githubData); i++ {
-		_, err := bot.SendMessage(update.Message.Chat.Id, "Repository: " + githubData[i].Repository.Name + "\nNotification: " + githubData[i].Subject.Title + "\n" + githubData[i].Subject.Url)
+		dataSet = addIfNotIncluded(dataSet, GithubDataMessage{githubData[i], false})
+	}
 
-		if err != nil {
-			log.Fatal(err)
+	for index, value := range dataSet {
+		if dataSet[index].Send == false {
+			_, err := bot.SendMessage(update.Message.Chat.Id, "Repository: " + value.GithubData.Repository.Name + "\nNotification: " + value.GithubData.Subject.Title + "\n" + value.GithubData.Subject.Url)
+			dataSet[index].Send = true
+			if err != nil {
+				log.Fatal(err)
+			}
+
 		}
 	}
 
