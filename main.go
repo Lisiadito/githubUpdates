@@ -2,7 +2,7 @@
  * - error handling
  * - check on start if all env are set
  * - check for chat token so that only the correct person gets the notifications
- * - chat token could be set in .env or passed in via command line 
+ * - chat token could be set in .env or passed in via command line
  * - define struct and maybe send more information like repo name
  * - dockerize
  */
@@ -27,7 +27,7 @@ import (
 )
 
 type GithubDataType struct {
-	Subject Subject `json:"subject"`
+	Subject    Subject    `json:"subject"`
 	Repository Repository `json:"repository"`
 }
 
@@ -42,7 +42,7 @@ type Repository struct {
 
 type GithubDataMessage struct {
 	GithubData GithubDataType
-	Send bool
+	Send       bool
 }
 
 var telegram_api_token string
@@ -52,7 +52,7 @@ var dataSet []GithubDataMessage
 
 func init() {
 	gotenv.Load()
-	telegram_api_token = os.Getenv("TELEGRAM_API_TOKEN") 
+	telegram_api_token = os.Getenv("TELEGRAM_API_TOKEN")
 	github_api_token = os.Getenv("GITHUB_API_TOKEN")
 }
 
@@ -81,7 +81,7 @@ func addIfNotIncluded(myslice []GithubDataMessage, item GithubDataMessage) []Git
 	}
 	return append(myslice, item)
 }
-  
+
 func addCronJob(bot ext.Bot, update *gotgbot.Update) error {
 	if len(c.Entries()) < 1 {
 		// call function every minute to check for updates
@@ -100,7 +100,7 @@ func checkGithub(bot ext.Bot, update *gotgbot.Update) error {
 	}
 
 	request, err := http.NewRequest("GET", "https://api.github.com/notifications", nil)
-	request.Header.Add("Authorization", "token " + github_api_token)
+	request.Header.Add("Authorization", "token "+github_api_token)
 
 	if err != nil {
 		log.Fatal(err)
@@ -135,7 +135,7 @@ func checkGithub(bot ext.Bot, update *gotgbot.Update) error {
 
 	for index, value := range dataSet {
 		if dataSet[index].Send == false {
-			_, err := bot.SendMessage(update.Message.Chat.Id, "Repository: " + value.GithubData.Repository.Name + "\nNotification: " + value.GithubData.Subject.Title + "\n" + value.GithubData.Subject.Url)
+			_, err := bot.SendMessage(update.Message.Chat.Id, "Repository: "+value.GithubData.Repository.Name+"\nNotification: "+value.GithubData.Subject.Title+"\n"+value.GithubData.Subject.Url)
 			dataSet[index].Send = true
 			if err != nil {
 				log.Fatal(err)
