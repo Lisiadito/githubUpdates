@@ -73,13 +73,27 @@ func main() {
 	updater.Idle()
 }
 
-func addIfNotIncluded(myslice []GithubDataMessage, item GithubDataMessage) []GithubDataMessage {
-	for i := 0; i < len(myslice); i++ {
-		if myslice[i].GithubData == item.GithubData {
-			return myslice
+func addIfNotIncluded(item GithubDataMessage) []GithubDataMessage {
+	for i := 0; i < len(dataSet); i++ {
+		if dataSet[i].GithubData == item.GithubData {
+			return dataSet
 		}
 	}
-	return append(myslice, item)
+	return append(dataSet, item)
+}
+
+// checks if any messages in the dataSet are not in the newMessages
+// which means they are already read
+func removeIfRead(newMessages []GithubDataType) {
+	var tmp []GithubDataMessage
+	for i := 0; i < len(dataSet); i++ {
+		for j := 0; j < len(newMessages); j++ {
+			if dataSet[i].GithubData == newMessages[j] {
+				tmp = append(tmp, dataSet[i])
+			}
+		}
+	}
+	dataSet = tmp
 }
 
 func addCronJob(bot ext.Bot, update *gotgbot.Update) error {
@@ -130,8 +144,11 @@ func checkGithub(bot ext.Bot, update *gotgbot.Update) error {
 
 	// add the the github data if not already included
 	for i := 0; i < len(githubData); i++ {
-		dataSet = addIfNotIncluded(dataSet, GithubDataMessage{githubData[i], false})
+		dataSet = addIfNotIncluded(GithubDataMessage{githubData[i], false})
 	}
+
+	// IMPORTANT this needs to be called after addIfNotIncluded
+	removeIfRead(githubData)
 
 	for index, value := range dataSet {
 		if dataSet[index].Send == false {
