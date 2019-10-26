@@ -70,6 +70,7 @@ func main() {
 
 	// message handler
 	updater.Dispatcher.AddHandler(handlers.NewCommand("start", addCronJob))
+	updater.Dispatcher.AddHandler(handlers.NewCommand("running", isRunning))
 
 	// start getting updates
 	updater.StartPolling()
@@ -112,6 +113,11 @@ func addCronJob(bot ext.Bot, update *gotgbot.Update) error {
 		log.Println("Added cronjob.")
 	}
 
+	return nil
+}
+
+func isRunning(bot ext.Bot, update *gotgbot.Update) error {
+	bot.SendMessage(update.Message.Chat.Id, "Bot is running")
 	return nil
 }
 
