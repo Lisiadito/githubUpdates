@@ -51,12 +51,17 @@ var c = cron.New()
 var dataSet []GithubDataMessage
 
 func init() {
+	log.Println("Initialization starting...")
+
 	gotenv.Load()
 	telegram_api_token = os.Getenv("TELEGRAM_API_TOKEN")
 	github_api_token = os.Getenv("GITHUB_API_TOKEN")
+	log.Println("Initialization done.")
 }
 
 func main() {
+	log.Println("Bot started.")
+
 	updater, err := gotgbot.NewUpdater(telegram_api_token)
 
 	if err != nil {
@@ -71,7 +76,6 @@ func main() {
 
 	// wait
 	updater.Idle()
-	log.Println("Started Bot")
 }
 
 func addIfNotIncluded(item GithubDataMessage) []GithubDataMessage {
@@ -98,13 +102,14 @@ func removeIfRead(newMessages []GithubDataType) {
 }
 
 func addCronJob(bot ext.Bot, update *gotgbot.Update) error {
+	log.Println("Got start command.")
 	if len(c.Entries()) < 1 {
 		// call function every minute to check for updates
 		c.AddFunc("* * * * *", func() {
 			checkGithub(bot, update)
 		})
 		c.Start()
-		log.Println("Added cronjob")
+		log.Println("Added cronjob.")
 	}
 
 	return nil
