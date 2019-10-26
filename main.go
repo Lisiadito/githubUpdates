@@ -71,6 +71,7 @@ func main() {
 
 	// wait
 	updater.Idle()
+	log.Println("Started Bot")
 }
 
 func addIfNotIncluded(item GithubDataMessage) []GithubDataMessage {
@@ -103,6 +104,7 @@ func addCronJob(bot ext.Bot, update *gotgbot.Update) error {
 			checkGithub(bot, update)
 		})
 		c.Start()
+		log.Println("Added cronjob")
 	}
 
 	return nil
