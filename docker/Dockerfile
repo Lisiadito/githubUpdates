@@ -1,17 +1,15 @@
 FROM golang:latest
-MAINTAINER LamdaLamdaLamda
+LABEL maintainer "LamdaLamdaLamda, Lisiadito"
 LABEL version="0.1"
 LABEL name="githubUpdates"
 
-WORKDIR /app
-RUN apt install -y git
-CMD command -v go || echo "Build failed..."; exit 1;
-RUN git clone https://github.com/Lisiadito/githubUpdates
-WORKDIR /app/githubUpdates
-RUN export GOPATH=$GOPATH:/app/githubUpdates
-ENV TELEGRAM_API_TOKEN SOME_API_KEY
-ENV GITHUB_API_TOKEN SOME_API_KEY
-RUN go get -d ./...
+RUN command -v go
+#RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+RUN apt update
+RUN apt-get install go-dep
+RUN go get github.com/Lisiadito/githubUpdates
+WORKDIR /go/src/github.com/Lisiadito/githubUpdates
+RUN dep ensure
 RUN go build main.go
-COPY .env .
-ENTRYPOINT bash
+#ENTRYPOINT bash
+CMD ["./main"]
