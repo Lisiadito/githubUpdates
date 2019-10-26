@@ -56,6 +56,11 @@ func init() {
 	gotenv.Load()
 	telegram_api_token = os.Getenv("TELEGRAM_API_TOKEN")
 	github_api_token = os.Getenv("GITHUB_API_TOKEN")
+
+	if(len(telegram_api_token) == 0 || len(github_api_token) == 0) {
+		log.Fatal("env missing")
+	}
+	
 	log.Println("Initialization done.")
 }
 
